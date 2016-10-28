@@ -1,0 +1,12 @@
+mail.smtp.host = localhost
+mail.smtp.socketFactory.class = javax.net.ssl.SSLSocketFactory
+mail.smtp.ssl.enable = false
+mail.smtp.starttls.enable = false
+mail.smtp.auth = false
+mail.smtp.port = 25
+FROM = soso@localhost
+mongo.server = localhost
+mongo.database = test
+mongo.collection = employee
+mongo.port = 27017
+mongo.appraised.collection = appraised
