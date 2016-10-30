@@ -77,23 +77,6 @@ public class MongoDatastore implements Datastore {
 	  return eau;
   }
 
-	private List<Responder> createResponders(DBObject mongoObject) {
-	   List<String> nameEmailsCodes = ((List<String>) mongoObject.get("contacts"));
-	   List<Responder> responders = processContacts(nameEmailsCodes);
-	  return responders;
-  }
-
-	private List<Responder> processContacts(List<String> nameEmailsCode) {
-		List<Responder> responders = new ArrayList<>();
-	  for(String nameEmailCode:nameEmailsCode){
-	  	 String[]  nameEmail = nameEmailCode.split(":");
-//	  	 Responder responderEntry = new Responder();
-//	  	 responderEntry.fname = nameEmail[0];
-//	  	 responderEntry.email = nameEmail[1];
-//	  	 responders.add(responderEntry);
-	   }
-	  return responders ;
-  }
 	// change emails is assigned to return of function 
 	public List<String> employeesEmailsWithoutContacts(){
 		List<String> emails = new ArrayList<>();
