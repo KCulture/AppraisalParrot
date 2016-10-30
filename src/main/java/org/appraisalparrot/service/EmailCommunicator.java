@@ -52,17 +52,22 @@ public class EmailCommunicator implements Communicator {
 	}
 	
 	private void sendMessage(EmployeeAndUnresponsives employees) { 
-	   String from = properties.getProperty("FROM");
 	    Authenticator auth = createAuth();
 	    Session session = Session.getInstance(properties, auth);
 	    session.setDebug(true);
-	   try {
+	   wrappedSendMessage(employees,session);
+	}
+
+
+	private void wrappedSendMessage(EmployeeAndUnresponsives employees,
+      Session session) {
+		String from = properties.getProperty("FROM");
+	  try {
 	  	  Transport.send(createMessage(employees, from, session));
-	      System.out.println("Sent message successfully....");
 	   }catch (MessagingException mex) {
 	      mex.printStackTrace();
 	   }
-	}
+  }
 	
 	private MimeMessage createMessage(EmployeeAndUnresponsives employees, String from,
 	    Session session) throws MessagingException, AddressException {
