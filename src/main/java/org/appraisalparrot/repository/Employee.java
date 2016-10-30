@@ -9,4 +9,5 @@ public class Employee {
 	public Date hireDate ;
 	public String email;
 	public List<Responder> contacts;
+  public Stage stage;	
 }
