@@ -7,9 +7,9 @@ import java.util.Properties;
 
 import org.appraisalparrot.repository.EmployeeAndUnresponsives;
 import org.appraisalparrot.repository.Responder;
+import org.appraisalparrot.repository.Stage;
 
 import com.mongodb.DB;
-import com.mongodb.DBAddress;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
@@ -23,7 +23,7 @@ public class MongoDatastore implements Datastore {
 	
 	public MongoDatastore(Properties props){
 		this.props = props;
-		
+		this.initDatabase();
 	}
 	
 	private MongoClient initDatabase(){
@@ -32,7 +32,7 @@ public class MongoDatastore implements Datastore {
 				mongoClient = new MongoClient( this.props.getProperty("mongo.server"), 
 						Integer.valueOf(this.props.getProperty("mongo.port")));
 				mongoDB = mongoClient.getDB(this.props.getProperty("mongo.database"));
-				cursor = mongoDB.getCollection(this.props.getProperty("mongo.collection")).find();
+				cursor = mongoDB.getCollection(this.props.getProperty("mongo.appraised.collection")).find();
 			}
 		}catch(UnknownHostException noHost){
 			noHost.addSuppressed(noHost);
@@ -40,43 +40,46 @@ public class MongoDatastore implements Datastore {
 		}
 		return mongoClient;
 	}
+	public DB getDB(){
+		return mongoDB;
+	}
 
 	@Override
 	public List<EmployeeAndUnresponsives> findUnresponsiveInStore() {
-		
-		return employeeWithUnresponsive();
-	}
-	
-	private List<EmployeeAndUnresponsives> employeeWithUnresponsive(){
-		
-		List<EmployeeAndUnresponsives> employees = new ArrayList<>();
 		DBCursor localCursor = cursor.copy();
-		employees.addAll(getUnresponsive(localCursor));
+		List<EmployeeAndUnresponsives> employees = this.getUnresponsive(localCursor);
 		return employees;
 	}
-  // TODO make sure to add contacts to employee
-	private List<EmployeeAndUnresponsives> getUnresponsive(
-      DBCursor localCursor) {
+	
+	
+	private List<EmployeeAndUnresponsives> getUnresponsive(DBCursor localCursor) {
 		List<EmployeeAndUnresponsives> nonResponders = new ArrayList<>(); 
 	  for(DBObject mongoObject:localCursor){
-	  	if(mongoObject.get("contacts") != null){
+	  	if(this.doesEmployeeUnresponsiveContracts(mongoObject)){
 	  		nonResponders.add(createEmployeeAndUnresponsive(mongoObject));
 	  	} 
 	  }
-	  return null;
+	  return nonResponders;
   }
+	
+	private boolean doesEmployeeUnresponsiveContracts(DBObject mongoObject){
+		return mongoObject.get("contacts") != null && 
+				Stage.CONTACTS.ordinal() <= ((Integer) mongoObject.get("stage"))
+						&& Stage.REPONSE.ordinal() > ((Integer) mongoObject.get("stage"))  ; 
+	}
 
 	private EmployeeAndUnresponsives createEmployeeAndUnresponsive(
       DBObject mongoObject) {
 	  EmployeeAndUnresponsives eau = new EmployeeAndUnresponsives();
 	  eau.name = ((String) mongoObject.get("firstname") + " " + (String) mongoObject.get("lastname"));
-	  eau.emails = createResponders(mongoObject); 
+	  //eau.emails = createResponders(mongoObject); TODO remove if possible
+	  eau.emails = (List<Responder>) mongoObject.get("contacts");
 	  return eau;
   }
 
 	private List<Responder> createResponders(DBObject mongoObject) {
-	   List<String> nameEmailsCode = ((List<String>) mongoObject.get("contacts"));
-	   List<Responder> responders = processContacts(nameEmailsCode);
+	   List<String> nameEmailsCodes = ((List<String>) mongoObject.get("contacts"));
+	   List<Responder> responders = processContacts(nameEmailsCodes);
 	  return responders;
   }
 
@@ -84,12 +87,34 @@ public class MongoDatastore implements Datastore {
 		List<Responder> responders = new ArrayList<>();
 	  for(String nameEmailCode:nameEmailsCode){
 	  	 String[]  nameEmail = nameEmailCode.split(":");
-	  	 Responder responderEntry = new Responder();
-	  	 responderEntry.fname = nameEmail[0];
-	  	 responderEntry.email = nameEmail[1];
-	  	 responders.add(responderEntry);
+//	  	 Responder responderEntry = new Responder();
+//	  	 responderEntry.fname = nameEmail[0];
+//	  	 responderEntry.email = nameEmail[1];
+//	  	 responders.add(responderEntry);
 	   }
 	  return responders ;
   }
+	// change emails is assigned to return of function 
+	public List<String> employeesEmailsWithoutContacts(){
+		List<String> emails = new ArrayList<>();
+		if(cursor != null){
+			DBCursor localCursor = cursor.copy();
+			for(DBObject mongoObject: localCursor){
+				if(this.emailedWithEmptyContacts(mongoObject)) {
+					emails.add((String)mongoObject.get("email"));
+				}
+			}
+		}
+		return emails;
+	}
+
+	private boolean emailedWithEmptyContacts(DBObject mongoObject) {
+	 return  Stage.EMPLOYEE_EMAILED.ordinal() <= ((Integer)mongoObject.get("stage")) &&
+			 ((Integer)mongoObject.get("stage")) < Stage.CONTACTS.ordinal() && 
+			 (((List<Responder>)mongoObject.get("contacts")) == null 
+					 || ((List<Responder>)mongoObject.get("contacts")).isEmpty());
+	}
+	
+	
 
 }
