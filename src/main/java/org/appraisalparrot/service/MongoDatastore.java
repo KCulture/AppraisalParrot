@@ -2,9 +2,11 @@ package org.appraisalparrot.service;
 
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
+import org.appraisalparrot.repository.Employee;
 import org.appraisalparrot.repository.EmployeeAndUnresponsives;
 import org.appraisalparrot.repository.Responder;
 import org.appraisalparrot.repository.Stage;
@@ -78,18 +80,30 @@ public class MongoDatastore implements Datastore {
   }
 
 	// change emails is assigned to return of function 
-	public List<String> employeesEmailsWithoutContacts(){
-		List<String> emails = new ArrayList<>();
+	public List<Employee> employeesEmailsWithoutContacts(){
+		List<Employee> employees = new ArrayList<>();
 		if(cursor != null){
 			DBCursor localCursor = cursor.copy();
 			for(DBObject mongoObject: localCursor){
 				if(this.emailedWithEmptyContacts(mongoObject)) {
-					emails.add((String)mongoObject.get("email"));
+					employees.add(this.DBObjectToEmployee(mongoObject));
 				}
 			}
 		}
-		return emails;
+		return employees;
 	}
+
+	private Employee DBObjectToEmployee(DBObject mongoObject) {
+		Employee e = new Employee();
+	  e.firstName  = ((String) mongoObject.get("firstName"));
+  	e.lastName = ((String) mongoObject.get("lastName"));
+  	e.hireDate = ((Date) mongoObject.get("hireDate"));
+  	e.email= ((String) mongoObject.get("email"));
+  	e.contacts= ((List<Responder>) mongoObject.get("contacts"));
+  	e.stage=	(Integer) mongoObject.get("stage") ;
+    
+  	return e;
+  }
 
 	private boolean emailedWithEmptyContacts(DBObject mongoObject) {
 	 return  Stage.EMPLOYEE_EMAILED.ordinal() <= ((Integer)mongoObject.get("stage")) &&

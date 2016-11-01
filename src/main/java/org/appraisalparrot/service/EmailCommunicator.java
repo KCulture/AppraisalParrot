@@ -82,7 +82,7 @@ public class EmailCommunicator implements Communicator {
 	private InternetAddress[] getEmployeeEmails(EmployeeAndUnresponsives employees) throws AddressException{
 		StringBuilder addresses = new StringBuilder();
 		for(Responder employee :employees.emails){
-			addresses.append(employee.email+",");
+			addresses.append(employee.getEmail()+",");
 		}
 		return InternetAddress.parse(addresses.toString());
 	}

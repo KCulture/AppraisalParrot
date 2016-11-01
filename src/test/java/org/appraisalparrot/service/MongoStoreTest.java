@@ -88,20 +88,20 @@ public class MongoStoreTest {
 		
 		@Test
 		public void count(){
-			Assert.assertTrue("the size is not 4 the size is "+ this.mongo.findUnresponsiveInStore().size(),
-					this.mongo.findUnresponsiveInStore().size()== 4);
+			Assert.assertTrue("the size is not 4 the size is "+ mongo.findUnresponsiveInStore().size(),
+					mongo.findUnresponsiveInStore().size()== 4);
 		}
 		
 		@Test
 		public void countEmployeeWithNoResponders(){
-			Assert.assertTrue("the size is not 4 the size is "+ this.mongo.findUnresponsiveInStore().size(),
-					this.mongo.employeesEmailsWithoutContacts().size()== 1);
+			Assert.assertTrue("the size is not 4 the size is "+ mongo.findUnresponsiveInStore().size(),
+					mongo.employeesEmailsWithoutContacts().size()== 1);
 		}
 		
 		@Test
 		public void employeeEmailWithNoResponders(){
-			Assert.assertTrue("the size is not 4 the size is "+ this.mongo.findUnresponsiveInStore().size(),
-					this.mongo.employeesEmailsWithoutContacts().get(0).equalsIgnoreCase("wqq@be.c"));
+			Assert.assertTrue("email is not showing up"+ mongo.findUnresponsiveInStore().size(),
+					mongo.employeesEmailsWithoutContacts().get(0).email.equalsIgnoreCase("wqq@be.c"));
 		}
 		
 }

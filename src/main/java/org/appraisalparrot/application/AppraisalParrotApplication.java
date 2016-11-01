@@ -7,17 +7,37 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
 
+import javax.activation.DataSource;
+
+import org.appraisalparrot.service.Communicator;
+import org.appraisalparrot.service.Datastore;
+import org.appraisalparrot.service.EmailCommunicator;
+import org.appraisalparrot.service.MongoDatastore;
+
 public class AppraisalParrotApplication {
 
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-
+		Datastore dataStore = selectDatastore(args);
+		Communicator comm = selectComm(args);
+		comm.broadcastToResponders(dataStore.findUnresponsiveInStore());
+		comm.broadcastToEmployees(dataStore.employeesEmailsWithoutContacts());
 	}
 	
-	public Properties loadProps(){
+	private static EmailCommunicator selectComm(String[] args){
+		return (args != null && args.length > 0) 
+			?	new EmailCommunicator(loadProps(args[0]))
+		  :	new EmailCommunicator(loadProps());
+	}
+	private static MongoDatastore selectDatastore(String[] args){
+		return (args != null && args.length > 0) 
+		? new MongoDatastore(loadProps(args[0]))
+		:	new MongoDatastore(loadProps());
+	}
+	
+	private static Properties loadProps(){
 		Properties properties = new Properties();
 		try {
 			properties.load(AppraisalParrotApplication.class.getResourceAsStream("config.txt"));
@@ -28,18 +48,9 @@ public class AppraisalParrotApplication {
 		return properties;
 	}
 	
-	public String findFileName(String filename){
-		if(filename.startsWith("../")) return findRoot(filename,Paths.get(System.getProperty("user.dir")));
-		return Paths.get(filename).toString();
-	}
-	
-	public String findRoot(String fileName,Path path){
-		if(!fileName.startsWith("..") || path.toString().isEmpty()) return path +"/"+ fileName;
-		else return findRoot(fileName.substring(3),path.getParent());
-	}
 	
 //Produces property file from fileName or default property file stored in jar 
-	public  Properties loadProps(String fileName){
+	private static  Properties loadProps(String fileName){
 		Properties properties = new Properties();
 		if(fileName != null ){
 			try (InputStream in = new FileInputStream(fileName)){
@@ -54,4 +65,13 @@ public class AppraisalParrotApplication {
 		return properties;
 	}
 
+	private static String findFileName(String filename){
+		if(filename.startsWith("../")) return findRoot(filename,Paths.get(System.getProperty("user.dir")));
+		return Paths.get(filename).toString();
+	}
+	
+	private static String findRoot(String fileName,Path path){
+		if(!fileName.startsWith("..") || path.toString().isEmpty()) return path +"/"+ fileName;
+		else return findRoot(fileName.substring(3),path.getParent());
+	}
 }
