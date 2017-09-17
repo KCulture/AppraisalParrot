@@ -7,9 +7,10 @@ public class Responder extends BasicDBObject{
 	
 	public Responder(){}
 	
-	public Responder(String fname,String email){
+	public Responder(String fname,String email,String link){
 		super.put("fname",fname);
 		super.put("email", email);
+		super.put("link", link);
 		
 	}
 
@@ -27,6 +28,14 @@ public class Responder extends BasicDBObject{
 
 	public void setEmail(String email) {
 		super.put("email", email);
+	}
+	
+	public String getLink() {
+		return super.getString("link");
+	}
+
+	public void setLink(String link) {
+		super.put("link", link);
 	}
 	
 
